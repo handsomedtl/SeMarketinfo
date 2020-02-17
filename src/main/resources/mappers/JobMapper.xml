@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bhzq.marketinfo.mapper.JobMapper">
+
+  <select id="list" resultType="com.bhzq.marketinfo.entity.domain.JobAndTrigger">
+	SELECT
+		job_details.`JOB_NAME`,
+		job_details.`JOB_GROUP`,
+		job_details.`JOB_CLASS_NAME`,
+		job_details.`DESCRIPTION`,
+		cron_triggers.`CRON_EXPRESSION`,
+		cron_triggers.`TIME_ZONE_ID`,
+		qrtz_triggers.`TRIGGER_NAME`,
+		qrtz_triggers.`TRIGGER_GROUP`,
+		qrtz_triggers.`TRIGGER_STATE`
+	FROM
+		`QRTZ_JOB_DETAILS` job_details
+		LEFT JOIN `QRTZ_CRON_TRIGGERS` cron_triggers ON job_details.`JOB_NAME` = cron_triggers.`TRIGGER_NAME` 
+		LEFT JOIN `QRTZ_TRIGGERS` qrtz_triggers ON qrtz_triggers.`TRIGGER_NAME` = job_details.`JOB_NAME`
+    </select>
+    
+    
+    <select id="taskGroupList" resultType="java.lang.String">
+		SELECT		
+			DISTINCT `JOB_GROUP`		
+		FROM
+			`QRTZ_JOB_DETAILS` GROUP BY `JOB_GROUP` ORDER BY `JOB_GROUP`;
+    </select>
+    
+    
+    <select id="taskNameCount" resultType="java.lang.Integer" parameterType="java.lang.String">
+		SELECT count(*)  from `QRTZ_JOB_DETAILS` where JOB_NAME = #{taskName}
+    </select>
+    
+</mapper>

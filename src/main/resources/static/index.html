@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>通用定时器</title>
+    <link href="jquery-ui-1.12.1.custom/jquery-ui.css" rel="stylesheet">
+    <link href="css/taskform.css" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="DataTables/datatables.min.css"/>
+	
+    <script src="jquery-ui-1.12.1.custom/external/jquery/jquery.js"></script>
+	<script src="jquery-ui-1.12.1.custom/jquery-ui.js"></script>
+	<script src="js/validate/jquery.validate.min.js"></script> 
+	<script type="text/javascript" src="DataTables/datatables.min.js"></script>
+
+    <style>
+    	#top {
+           text-align: center;
+        }
+        #bar {
+            /* background: #aaaaaa; */
+            padding: 5px;
+            /*overflow: hidden*/
+        }
+    </style>
+
+</head>
+<body>
+
+<div id="tabs">
+	<ul>
+		<li><a href="#tabs-1">首页</a></li>
+		<li><a href="#tabs-2">帮助</a></li>
+		<li><a href="#tabs-3">Third</a></li>
+	</ul>
+	<div id="tabs-1">
+		
+		<div id="job">
+			<div id="top">
+				<h2>通用定时组件</h2>
+			</div>			
+			
+			<div id="radioset">
+				<button id="button-search">查询</button>
+				<button id="button-addnew">添加</button>
+			</div>	
+			<p></p>
+			<table id="jobTable" class="cell-border" style="margin-top:50px; width:70%">
+		       <thead>
+		           <tr>
+		               <th>任务名称</th>
+		               <th>任务所在组</th>
+		               <th>命令行</th>
+		               <th>表达式</th>
+		               <th>任务描述</th>
+		               <th>状态</th>
+		               <th>操作</th>
+		           </tr>
+		       </thead>		      
+		   </table>
+		</div>
+	</div>
+	
+	<div id="tabs-2">Phasellus mattis tincidunt nibh. Cras orci urna, blandit id, pretium vel, aliquet ornare, felis. Maecenas scelerisque sem non nisl. Fusce sed lorem in enim dictum bibendum.</div>
+	<div id="tabs-3">Nam dui erat, auctor a, dignissim quis, sollicitudin eu, felis. Pellentesque nisi urna, interdum eget, sagittis et, consequat vestibulum, lacus. Mauris porttitor ullamcorper augue.</div>
+</div>
+
+<footer align="center">
+    <p style="font-size: 12px">&copy; 信息技术总部-技术开发部</p>
+</footer>
+
+
+<form id="addTaskDlg" title="添加任务">
+	    <ol class="reg_error"></ol>	    
+	    <p>
+	        <label for="form.jobName">任务名称：</label>
+	        <input type="text" name="form.jobName" class="text" id="form.jobName" placeholder="输入唯一任务名"/>
+	        <span class="star">*</span>
+	    </p>
+	    <p>
+	        <label for="form.jobGroup">任务分组：</label>
+	        <input type="text" name="form.jobGroup"  class="text" id="form.jobGroup"/>
+	        <span class="star">*</span>
+	    </p>
+	    
+	    <p>
+	        <label for="form.jobName">&nbsp;&nbsp;&nbsp;&nbsp;命令行：</label>
+	        <input type="text" name="form.command" class="text" id="form.command"/>
+	        <span class="star">*</span>
+	    </p>
+	    <p>
+	        <label for="form.cronExpression">&nbsp;&nbsp;&nbsp;&nbsp;表达式：</label>
+	        <input type="text" name="form.cronExpression" class="text" id="form.cronExpression"/>
+	        <span class="star">*</span>
+	    </p>
+	    <p>
+	        <label for="form.description">任务描述：</label>
+	        <textarea rows="3" cols="25" name="form.description" id="form.description"></textarea>
+	        <span class="star">*</span>
+	    </p>
+</form>
+
+
+</body>
+
+	<script src="js/job.js"></script> 
+</html>

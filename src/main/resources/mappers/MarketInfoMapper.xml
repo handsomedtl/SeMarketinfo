@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bhzq.marketinfo.mapper.MarketInfoMapper">
+
+  <select id="indexList" resultType="com.bhzq.marketinfo.entity.domain.IndexInfo" parameterType="java.lang.String">
+	SELECT
+		log.`id`,
+		log.`code`,
+		log.`name`,
+		log.`newPrice`,
+		log.`increper`,
+		log.`increase`,
+		log.`insertTime`
+	FROM
+		`t_indexinfo` log
+		<where>
+				log.`code` in 
+				<foreach collection="list" item="tagCode" index="index"
+			               open="(" close=")" separator=",">
+			        #{tagCode}
+			      </foreach>			     
+		</where>
+    </select>
+    
+      <select id="newsList" resultType="com.bhzq.marketinfo.entity.domain.NewsInfo" parameterType="java.lang.String">
+		SELECT
+			log.`id`,
+			log.`code`,
+			log.`title`,
+			log.`time`,
+			log.`insertTime`
+		FROM
+			`t_headlines` log
+			<where>
+				log.`code` in 
+				<foreach collection="list" item="tagCode" index="index"
+			               open="(" close=")" separator=",">
+			        #{tagCode}
+			      </foreach>		     
+			</where>
+	    </select>
+    
+    
+     <select id="typeList" resultType="com.bhzq.marketinfo.entity.domain.Dict">
+		SELECT	
+			`type`,`typeName`			
+		FROM
+			`t_dict` group by `type`,`typeName`
+	 </select>
+   
+    
+</mapper>
