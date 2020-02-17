@@ -63,8 +63,7 @@ public class MarketInfoController {
     		cdata.setBackgroundColor(ChartDataSet.ColorType.getColor(i+1));
     		cdata.setBorderColor(cdata.getBackgroundColor());
     		cDataList.add(cdata);
-    	}
-    	
+    	}    	
     	
     	//计算并每一时间段所入库的数据量
     	
