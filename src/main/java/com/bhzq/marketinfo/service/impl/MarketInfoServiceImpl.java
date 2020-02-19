@@ -1,5 +1,6 @@
 package com.bhzq.marketinfo.service.impl;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,11 @@ public class MarketInfoServiceImpl implements MarketInfoService {
 	@Override
 	public List<Dict> typeList() {		
 		return marketInfoMapper.typeList();
+	}
+
+	@Override
+	public int findCount(Timestamp startTime, Timestamp endTime, String category) {		
+		return marketInfoMapper.findCount(startTime, endTime, category);
 	}
 
 }

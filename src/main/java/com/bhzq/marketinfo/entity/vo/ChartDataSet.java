@@ -1,19 +1,32 @@
 package com.bhzq.marketinfo.entity.vo;
 
+import java.util.List;
+
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
-public class ChartDataSet {	
+public class ChartDataSet implements Cloneable{	
 	private String label;
 	private String backgroundColor;
 	private String borderColor;	
 	private boolean fill = false;
+	private List<Integer> data;
 
 	
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		ChartDataSet t = (ChartDataSet) super.clone();
+		t.data = null;
+		
+		return t;
+	}
+
+
 	public static enum ColorType{
-		RED(1,"rgb(255, 99, 132)"),GREEN(2,"rgb(75, 192, 192)"),BLUE(2,"rgb(12, 12, 192)"),PINK(3,"rgb(120, 12, 0)");
+		RED(0,"rgb(255, 99, 132)"),GREEN(1,"rgb(75, 192, 192)"),BLUE(2,"rgb(12, 12, 192)"),PINK(3,"rgb(120, 12, 0)")
+		,OTHER1(4,"rgb(0, 0, 233)"),OTHER2(5,"rgb(0, 230, 230)"),OTHER3(6,"rgb(104, 12, 0)"),OTHER4(7,"rgb(96, 96, 96)");
 		
 		private int index;
 		private String rgb;
@@ -49,6 +62,7 @@ public class ChartDataSet {
 	        }
 	        return null;
 	    }
+		
 	}
 }
 

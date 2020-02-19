@@ -216,39 +216,27 @@
                 cronExpression: ''
             },
             loading: false,
+            statusOpened:false,//是否打开过实时监控页
             //图表X轴标签
-            dataLabels1:[],
-            dataLabels2:[],
-            //图表值
-            dataPV:[],
-            dataUV:[],
+            updateInterval:3000,
             chartConfig:{
 				type: 'line',
 				data: {
-					labels: this.dataLabels1,
-					datasets: [
-						{
-			                label: 'PV',
-			                data: this.dataPV,
-			                backgroundColor: 'rgb(255, 99, 132)',
-							borderColor: 'rgb(255, 99, 132)',
-			                fill: false
-						},
-						{
-			                label: 'UV',
-			                data: this.dataUV, 
-			                backgroundColor: 'rgb(75, 192, 192)',
-							borderColor: 'rgb(75, 192, 192)',
-			                fill: false, 
-			            }
-					]
+					datasets: []
 				},
 				options: {
 					responsive: true,
-					title: {
-						display: true,
-						text: 'PV/UV 实时统计'
-					},
+					title: {display: true, text: '数据入库实时统计'}
+				}
+			},
+			chartConfig1:{
+				type: 'bar',
+				data: {
+					datasets: []
+				},
+				options: {
+					responsive: true,
+					title: {display: true, text: '历史入库统计'}
 				}
 			}
         },
@@ -330,54 +318,69 @@
                 this.loadData(this.currentPage, this.pagesize,this.seachData,this.sortColumn,this.sortOrder);
             },
             tabChange:function(tab){
-            	console.log(tab);
+            	//console.log(tab);
             	if(tab.label ==='状态监控'){
-            		//第一次打开，未初始化
-            		if(this.dataPV.length == 0){
-            			
-            			for(var i=0;i <10;i++){
-            				this.dataPV.push(this.getRandomNum(200000, 300000));
-            				this.dataUV.push(this.getRandomNum(10000, 80000));
-            				
-            				this.dataLabels1.push(i+"h");
-            				this.dataLabels2.push(i+"h");
-            			}
-            			this.chartConfig.data.labels = this.dataLabels1;
-            			this.chartConfig.data.datasets[0].data = this.dataPV;
-						this.chartConfig.data.datasets[1].data = this.dataUV;
-            		
-            			var ctx1 = document.getElementById('chart1').getContext('2d');
-						var chart1 = new Chart(ctx1, this.chartConfig);
-						
-						var ctx2 = document.getElementById('chart2').getContext('2d');
-						var chart2= new Chart(ctx2, this.chartConfig);
-            		
-            			setInterval(function() {
-							if (vue.chartConfig.data.datasets.length > 0) {
-				
-								var last = parseInt(vue.dataLabels1[vue.dataLabels1.length - 1]);
-								var label = last + 1;
-								if (last >= 10) {
-									label = 0;
+	            	if(!this.statusOpened){
+	            		this.statusOpened = true;
+	            		var chart1,chart2;            	
+	            		//第一次打开，未初始化
+	           			this.$http.get("marketinfo/init-chart",{"params":{
+	                		
+	                	}}).then(function (res) {
+		                	this.chartConfig.data.labels = res.body.data.labels;
+		                	this.chartConfig.data.datasets = res.body.data.dataSets;
+		                	
+		                	this.chartConfig1.data.labels = res.body.data.labels1;
+		                	this.chartConfig1.data.datasets = res.body.data.dataSets1;
+		                	
+							this.updateInterval = res.body.data.timeSpan * 1000;
+							
+							var ctx1 = document.getElementById('chart1').getContext('2d');
+							chart1 = new Chart(ctx1, this.chartConfig);	
+												
+							var ctx2 = document.getElementById('chart2').getContext('2d');
+							chart2= new Chart(ctx2, this.chartConfig1);	
+							
+							setInterval(function() {
+								if (vue.chartConfig.data.datasets.length > 0) {
+									vue.$http.get("marketinfo/update-chart",{"params":{
+			                		
+				                	}}).then(function (res) {
+					                	vue.chartConfig.data.labels.push(res.body.data.time);
+					                	vue.chartConfig.data.labels.shift();
+					                	
+					                	vue.chartConfig.data.datasets.forEach(function(item,index){
+										 	res.body.data.datas.forEach(function(data,index){
+										 		if(item.label == data.label){
+					                				item.data.push(data.data);
+					                				item.data.shift();
+					                				return;		                				
+					                			}											
+										 	});									 	
+										});
+										
+									 	//处理历史统计信息(服务器每5分钟更新一次)
+										if(undefined != res.body.data.datas1 && null != res.body.data.datas1){
+											vue.chartConfig1.data.datasets.forEach(function(item,index){								 	
+											 	res.body.data.datas1.forEach(function(data,index){
+											 		if(item.label == data.label){
+						                				item.data[item.data.length-1] = data.data;
+						                				return;		                				
+						                			}
+											 	});	 									 	
+											});
+					                	}
+					                	chart1.update();
+										chart2.update();
+					                }, function () {
+					                    console.error('failed');
+					                });
 								}
-								label = label + 'h';
-				
-								vue.dataLabels1.push(label);
-								vue.dataPV.push(vue.getRandomNum(200000, 300000));
-								vue.dataUV.push(vue.getRandomNum(10000, 80000));
-				
-								vue.dataLabels1.shift();
-								vue.dataPV.shift();
-								vue.dataUV.shift();
-				
-								chart1.update();
-								chart2.update();
-							}
-						}, 3000);
-            		}
-            		
-            		
-            		
+							}, this.updateInterval); 
+		                }, function () {
+		                    console.error('failed');
+		                });	
+	           		}           			           		
             	}
             },
             getRandomNum:function(min, max){
@@ -390,11 +393,6 @@
 
     //载入数据
     vue.loadData(vue.currentPage, vue.pagesize,vue.seachData,vue.sortColumn,vue.sortOrder);
-    
-    
- 
-
-		
 </script>
 
 </body>

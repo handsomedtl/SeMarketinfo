@@ -62,4 +62,9 @@ pagehelper:
   auto-dialect: true
   helper-dialect: mysql
   reasonable: true
-  params: count=countSql
+  params: count=countSql  
+ # 自定义参数
+initparam:
+  timespan: 5
+  timecount: 20
+  

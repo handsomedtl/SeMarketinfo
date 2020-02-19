@@ -47,6 +47,35 @@
 		FROM
 			`t_dict` group by `type`,`typeName`
 	 </select>
-   
+	 
+	<select id="findCount"  resultType="java.lang.Integer">
+		SELECT 
+		<choose>		    
+		    <when test="category eq 'M'.toString()">
+		        COUNT(*) cout FROM `t_headlines`
+		        WHERE insertTime BETWEEN #{startTime} AND #{endTime}
+		    </when>
+		    <when test='category!=null'>
+		        COUNT(*) cout FROM `t_indexinfo` 
+		        WHERE insertTime BETWEEN #{startTime} AND #{endTime} AND `category` like "%"#{category,jdbcType=VARCHAR}"%"
+		    </when>
+		    <otherwise>
+		       sum(cout) from (
+					SELECT
+						COUNT(*) AS cout
+						FROM
+							`t_indexinfo`
+						WHERE
+							insertTime BETWEEN #{startTime} AND #{endTime}
+						UNION ALL
+						SELECT COUNT(*) cout
+						FROM
+							`t_headlines`
+						WHERE
+							insertTime BETWEEN #{startTime} AND #{endTime}
+				) tb
+		    </otherwise>
+		</choose>
+    </select>
     
 </mapper>
