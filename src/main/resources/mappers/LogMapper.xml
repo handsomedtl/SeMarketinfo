@@ -54,4 +54,8 @@
 		</where>			
     </select>
     
+    <delete id="delete">
+	    delete from `T_Log` where `insertTime` &lt; #{endTime} and `type` &lt;&gt; '4'
+	</delete>
+    
 </mapper>

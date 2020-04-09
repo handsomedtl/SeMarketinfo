@@ -1,6 +1,7 @@
 package com.bhzq.marketinfo.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.quartz.SchedulerException;
 
@@ -21,7 +22,7 @@ import com.github.pagehelper.PageInfo;
  * @modified: yangkai.shen
  */
 public interface JobService {
-    /**
+	/**
      * 添加并启动定时任务
      *
      * @param form 表单参数 {@link JobForm}
@@ -35,7 +36,7 @@ public interface JobService {
      * @param form 表单参数 {@link JobForm}
      * @throws SchedulerException 异常
      */
-    void deleteJob(JobForm form) ;
+    void deleteJob(JobForm form) throws SchedulerException;
 
     /**
      * 暂停定时任务
@@ -43,7 +44,7 @@ public interface JobService {
      * @param form 表单参数 {@link JobForm}
      * @throws SchedulerException 异常
      */
-    void pauseJob(JobForm form);
+    void pauseJob(JobForm form) throws SchedulerException;
 
     /**
      * 恢复定时任务
@@ -51,7 +52,7 @@ public interface JobService {
      * @param form 表单参数 {@link JobForm}
      * @throws SchedulerException 异常
      */
-    void resumeJob(JobForm form);
+    void resumeJob(JobForm form) throws SchedulerException;
 
     /**
      * 重新配置定时任务
@@ -68,7 +69,7 @@ public interface JobService {
      * @param pageSize    每页条数
      * @return 定时任务列表
      */
-    PageInfo<JobAndTrigger> list(Integer currentPage, Integer pageSize);
+    PageInfo<JobAndTrigger> list(Integer currentPage, Integer pageSize,Map<String,Object> map);
     
     /**
      * 查询分组列表

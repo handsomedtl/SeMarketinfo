@@ -5,15 +5,11 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.format.datetime.DateFormatter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -24,9 +20,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.bhzq.marketinfo.common.ApiResponse;
 import com.bhzq.marketinfo.entity.domain.BaseInfo;
 import com.bhzq.marketinfo.entity.domain.Dict;
+import com.bhzq.marketinfo.entity.domain.LogEntity;
 import com.bhzq.marketinfo.entity.vo.ChartDataSet;
 import com.bhzq.marketinfo.entity.vo.ChartDataSet.ColorType;
 import com.bhzq.marketinfo.entity.vo.Initparam;
+import com.bhzq.marketinfo.service.LogService;
 import com.bhzq.marketinfo.service.MarketInfoService;
 
 import cn.hutool.core.util.ObjectUtil;
@@ -42,6 +40,9 @@ public class MarketInfoController {
 	@Autowired
 	private Initparam initParam;
 	
+	@Autowired
+	private LogService logService;
+	
 	
 	/**
 	 * 获取资讯信息
@@ -50,18 +51,37 @@ public class MarketInfoController {
 	 * @return
 	 */
     @GetMapping
-    public ResponseEntity<ApiResponse> jobList(Integer type, String codes) {
+    public ResponseEntity<ApiResponse> messageList(Integer type, String codes,
+    		HttpServletRequest request) {
+    	
+    	logService.addLog(LogEntity.create(LogEntity.LogType.SERVICE, 
+				LogEntity.Level.INFO, request.getRemoteAddr() + 
+				" type=" + type + " codes=" + codes +
+    			" 请求到来   url:/marketinfo/messageList"));
+		
+		ResponseEntity<ApiResponse> validStatus = marketInfoService.isValidUser(request.getHeader("user"), request.getHeader("password"));
+		
+		if(HttpStatus.OK != validStatus.getStatusCode()){
+			return validStatus;
+		}		
+    	
         if (ObjectUtil.isNull(type)) {
+        	logService.addLog(LogEntity.create(LogEntity.LogType.SERVICE, 
+    				LogEntity.Level.ERROR, "type参数不能为空"));
+        	
         	return new ResponseEntity<>(ApiResponse.msg("type参数不能为空"), HttpStatus.BAD_REQUEST);
         }
         
         if (StringUtils.isEmpty(codes)) {
+        	logService.addLog(LogEntity.create(LogEntity.LogType.SERVICE, 
+    				LogEntity.Level.ERROR, "codes参数不能为空，以逗号分割"));
         	return new ResponseEntity<>(ApiResponse.msg("codes参数不能为空"), HttpStatus.BAD_REQUEST);
         }
        
         List <String> codeList = Arrays.asList(codes.split(","));
         List<BaseInfo> resultList =  marketInfoService.list(type, codeList);
-                
+        if(null == resultList)
+        	return new ResponseEntity<>(ApiResponse.msg("不支持的信息类型，type=" + type), HttpStatus.BAD_REQUEST);
         
         return ResponseEntity.ok(ApiResponse.ok(resultList));
     }
@@ -99,18 +119,18 @@ public class MarketInfoController {
         	cdata.setData(data); 
         	dataSets[i] = cdata;
         	
-        	//准备第二个图表数据（柱状图）,只看最近两周的数据
+        	//准备第二个图表数据（柱状图）
         	ChartDataSet cdata1 = (ChartDataSet) cdata.clone();
         	List<Integer> data1 = new ArrayList<>();
-			for (int k = 0; k < 14; k++) {
+			for (int k = 0; k < initParam.getDatecount(); k++) {
 				Timestamp startDate ,endDate;				
 				if(0 == k){//今天日期处理
         			startDate = toBegin(new Timestamp(time));
         			endDate = new Timestamp(time);
         		}
 				else{
-					startDate = toBegin(new Timestamp(time-k*86400000));    				
-    				endDate = toEnd(new Timestamp(time-k*86400000));
+					startDate = toBegin(new Timestamp(time-k*86400000l));    				
+    				endDate = toEnd(new Timestamp(time-k*86400000l));
 				}
 				if(0 == i){
 					DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -146,7 +166,7 @@ public class MarketInfoController {
     		datas.add(dict);
     		
     		//每五分钟更新一次统计信息
-    		if(endTime.getMinutes() % 5 ==0 && endTime.getSeconds() <=10){
+    		if(endTime.getMinutes() % 5 == 0 && endTime.getSeconds() <=10){
     			dict = cn.hutool.core.lang.Dict.create().set("label",typeList.get(i).getTypeName());
         		dict.set("data",marketInfoService.findCount(toBegin(startTime), endTime, typeList.get(i).getType()));    			
     			datas1.add(dict);

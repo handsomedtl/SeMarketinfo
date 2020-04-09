@@ -47,7 +47,6 @@ public class JobForm {
     /**
      * 命令参数
      */
-    @NotBlank(message = "执行命令不能为空")
     private String command;
     
     /**

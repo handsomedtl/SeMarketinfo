@@ -48,6 +48,16 @@ public class LogEntity implements Serializable{
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     private Timestamp insertTime;
     
+    public static LogEntity create(LogType type,Level level,String msg){
+    	LogEntity log = new LogEntity();
+    	log.setContent(msg);
+    	log.setInsertTime(new Timestamp(System.currentTimeMillis()));
+    	log.setLevel(String.valueOf(level.index));
+    	log.setType(String.valueOf(type.index));
+    	
+    	return log;
+    }
+    
     /**
      * 日志分类
      * @author terry.duan

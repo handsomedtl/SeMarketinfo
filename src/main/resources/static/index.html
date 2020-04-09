@@ -2,105 +2,447 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>通用定时器</title>
-    <link href="jquery-ui-1.12.1.custom/jquery-ui.css" rel="stylesheet">
-    <link href="css/taskform.css" rel="stylesheet">
-	<link rel="stylesheet" type="text/css" href="DataTables/datatables.min.css"/>
-	
-    <script src="jquery-ui-1.12.1.custom/external/jquery/jquery.js"></script>
-	<script src="jquery-ui-1.12.1.custom/jquery-ui.js"></script>
-	<script src="js/validate/jquery.validate.min.js"></script> 
-	<script type="text/javascript" src="DataTables/datatables.min.js"></script>
+    <title>行情发布</title>
+    <link href="css/job.css" rel="stylesheet">
+    <script src="js/vue.min.js"></script>
+    <script src="js/vue-resource.min.js"></script>
+    <script src="js/other.js"></script>
+    <script src="js/chart.js"></script>
 
     <style>
-    	#top {
-           text-align: center;
-        }
-        #bar {
-            /* background: #aaaaaa; */
+        #top {
+            /* background: #20A0FF; */
             padding: 5px;
             /*overflow: hidden*/
         }
+        
+        .el-table .warning-row {
+		    background: PapayaWhip;
+		}
+		
+		.el-table .error-row {
+		    background: Plum;
+		}
+		.el-table .debug-row {
+		    background: #f0f9eb;
+		}
+  		
+  		.demo-table-expand label {
+			width: 90px;
+			color: #99a9bf
+		}
+		
+		.demo-table-expand .el-form-item {
+			margin-right: 0;
+			margin-bottom: 0;
+			width: 99%
+		}
+		
+		.el-row {
+		    margin-bottom: 20px;
+		    &:last-child {
+		      margin-bottom: 0;
+		    }
+		 }
+		 .el-col {
+		    border-radius: 4px;
+		 }
+		 .grid-content {
+		    border-radius: 4px;
+		    min-height: 400px;
+		  }
+		 
     </style>
 
 </head>
 <body>
-
-<div id="tabs">
-	<ul>
-		<li><a href="#tabs-1">首页</a></li>
-		<li><a href="#tabs-2">帮助</a></li>
-		<li><a href="#tabs-3">Third</a></li>
-	</ul>
-	<div id="tabs-1">
-		
-		<div id="job">
-			<div id="top">
-				<h2>通用定时组件</h2>
-			</div>			
-			
-			<div id="radioset">
-				<button id="button-search">查询</button>
-				<button id="button-addnew">添加</button>
-			</div>	
-			<p></p>
-			<table id="jobTable" class="cell-border" style="margin-top:50px; width:70%">
-		       <thead>
-		           <tr>
-		               <th>任务名称</th>
-		               <th>任务所在组</th>
-		               <th>命令行</th>
-		               <th>表达式</th>
-		               <th>任务描述</th>
-		               <th>状态</th>
-		               <th>操作</th>
-		           </tr>
-		       </thead>		      
-		   </table>
-		</div>
-	</div>
+<div id="job">	
+	<el-tabs type="border-card" @tab-click="tabChange">
+		<el-tab-pane label="运行日志">
+			<el-form :inline="true" :model="seachData">				  
+				<el-form-item label="日志级别">
+					<el-select v-model="seachData.level" placeholder="日志级别">
+						<el-option label="调试" value="1"></el-option>
+						<el-option label="正常" value="2"></el-option>
+						<el-option label="警告" value="3"></el-option>
+						<el-option label="错误" value="4"></el-option>
+					</el-select>
+				</el-form-item>
+						  
+				<el-form-item label="类型">
+					<el-select v-model="seachData.type" placeholder="类型">
+						<el-option label="内部运行" value="1"></el-option>
+						<el-option label="HTTP服务" value="2"></el-option>
+						<el-option label="行情采集" value="3"></el-option>
+						<el-option label="其它" value="4"></el-option>
+					</el-select>
+				</el-form-item>
+						  
+				<el-form-item label="时间范围">
+					<el-date-picker
+						v-model="seachData.timeSpan"
+						type="datetimerange"
+						value-format="yyyy-MM-dd HH:mm:ss"
+						range-separator="至"
+						start-placeholder="开始日期"
+						end-placeholder="结束日期">
+					</el-date-picker>
+				</el-form-item>
+						  
+				<el-form-item>
+					<el-button type="primary" @click="search">查询</el-button>
+				</el-form-item>
+			</el-form>		  	
+		  	
+		  	<el-table ref="logTable" :data="logTableData" style="width:100%" border center :row-class-name="tableRowClassName" @sort-change="sortChange">
+	            <el-table-column type="expand">
+				      <template slot-scope="props">
+				        <el-form label-position="left" inline class="demo-table-expand">
+				          <el-form-item label="类型">
+				            <span v-if="props.row.type==='1'" style="color: #606266">内部运行</span>
+							<span v-else-if="props.row.type==='2'" style="color: #606266">HTTP服务</span>
+							<span v-else-if="props.row.type==='3'" style="color: #606266">行情采集</span>
+							<span v-else style="color: #606266">其它</span>
+				          </el-form-item>
+				          <el-form-item label="级别">
+				            <span v-if="props.row.level==='2'">正常</span>
+							<span v-else-if="props.row.level==='3'">警告</span>
+							<span v-else-if="props.row.level==='4'" type="danger">错误</span>
+							<span v-else>调试</span>
+				          </el-form-item>
+				          <el-form-item label="内容">
+				            <span>{{ props.row.content }}</span>
+				          </el-form-item>
+				          <el-form-item label="时间">
+				            <span>{{ props.row.insertTime }}</span>
+				          </el-form-item>
+				        </el-form>
+				      </template>
+				</el-table-column>
+	            
+	            <el-table-column prop="id" label="编号" align="center" width="100"></el-table-column>
+	            <el-table-column prop="type" label="类型" sortable align="center" width="180">
+	            	<template scope="scope">
+						<span v-if="scope.row.type==='1'" style="color: #606266">内部运行</span>
+						<span v-else-if="scope.row.type==='2'" style="color: #606266">HTTP服务</span>
+						<span v-else-if="scope.row.type==='3'" style="color: #606266">行情采集</span>
+						<span v-else style="color: #606266">其它</span>
+					</template>
+	            </el-table-column>
+	            <el-table-column prop="level" label="级别" align="center" width="180">
+	            	<template scope="scope">
+						<span v-if="scope.row.level==='2'">正常</span>
+						<span v-else-if="scope.row.level==='3'">警告</span>
+						<span v-else-if="scope.row.level==='4'" type="danger">错误</span>
+						<span v-else>调试</span>
+					</template>
+	            </el-table-column>	            
+	            <el-table-column prop="content" label="内容" show-overflow-tooltip></el-table-column>
+	            <el-table-column prop="insertTime" label="时间" sortable="custom" align="center" width="200"></el-table-column>	            
+	        </el-table>
 	
-	<div id="tabs-2">Phasellus mattis tincidunt nibh. Cras orci urna, blandit id, pretium vel, aliquet ornare, felis. Maecenas scelerisque sem non nisl. Fusce sed lorem in enim dictum bibendum.</div>
-	<div id="tabs-3">Nam dui erat, auctor a, dignissim quis, sollicitudin eu, felis. Pellentesque nisi urna, interdum eget, sagittis et, consequat vestibulum, lacus. Mauris porttitor ullamcorper augue.</div>
+	        <div align="center">
+	            <el-pagination
+	                    @size-change="handleSizeChange"
+	                    @current-change="handleCurrentChange"
+	                    :current-page="currentPage"
+	                    :page-sizes="[10, 20, 30, 40, 50]"
+	                    :page-size="pagesize"
+	                    layout="total, sizes, prev, pager, next, jumper"
+	                    :total="totalCount">
+	            </el-pagination>
+	        </div>
+	  
+	  </el-tab-pane>
+	  <el-tab-pane label="状态监控">
+			<el-row>
+			  <el-col :span="12">
+			  	<div class="grid-content">
+			  		<canvas id="chart1"></canvas>
+			  	</div>
+			  </el-col>
+			  <el-col :span="12">
+			  	<div class="grid-content ">
+			  		<canvas id="chart2"></canvas>
+			  	</div>
+			  </el-col>
+			</el-row>			
+	  </el-tab-pane>
+	  <el-tab-pane label="接口测试">
+	  		<el-row :gutter="20">
+				  <el-col :span="12">
+				  	<div class="grid-content" style="padding-right:20px; border-right:2px dotted #999">
+				  		<el-form :model="testData">				  
+							<el-form-item label="用户名">
+								<el-input placeholder="输入Header 用户名"  v-model="testData.username"></el-input>
+							</el-form-item>
+									  
+							<el-form-item label="密码">
+								<el-input placeholder="输入Header 密码"  v-model="testData.password"></el-input>
+							</el-form-item>
+									  
+							<el-form-item label="信息类型">
+								<el-input placeholder="信息类型 1：指数     2：期货     3：资讯"  v-model="testData.type"></el-input>
+							</el-form-item>
+							
+							<el-form-item label="信息代码">
+								<el-input placeholder="输入代码，可以用英文逗号分割"  v-model="testData.codes"></el-input>
+							</el-form-item>
+									  
+							<el-form-item>
+								<el-button type="primary" @click="testComit">测试</el-button>
+							</el-form-item>
+						</el-form>
+				  	</div>
+				  </el-col>				  
+				  		  
+				  <el-col :span="12">
+				  	<div class="grid-content" >
+				  		<div style="margin-bottom: 10px"> <label class="el-form-item__label">返回结果:</label></div>
+				  		<el-input type="textarea" :autosize="{minRows: 16}" v-model="testData.result">
+						</el-input>				  		
+				  	</div>
+				  </el-col>
+			</el-row>
+		
+	  </el-tab-pane>	  
+	</el-tabs>   
 </div>
 
 <footer align="center">
-    <p style="font-size: 12px">&copy; 信息技术总部-技术开发部</p>
+    <p>&copy; 行情发布</p>
 </footer>
 
+<script>
+    var vue = new Vue({
+        el: "#job",
+        data: {
+            //表格当前页数据
+            logTableData: [],
+            seachData:{},
+            testData:{"result":""},
+            //请求的URL
+            url: 'log',
+            //默认每页数据量
+            pagesize: 10,
+            //当前页码
+            currentPage: 1,
+            sortColumn:'',
+            sortOrder:'asc',
+            //查询的页码
+            start: 1,
+            //默认数据总数
+            totalCount: 1000,
+            //添加对话框默认可见性
+            dialogFormVisible: false,
+            //修改对话框默认可见性
+            updateFormVisible: false,
+            //提交的表单
+            form: {
+                jobName: '',
+                jobGroup: '',
+                cronExpression: ''
+            },
+            updateform: {
+                jobName: '',
+                jobGroup: '',
+                cronExpression: ''
+            },
+            loading: false,
+            statusOpened:false,//是否打开过实时监控页
+            //图表X轴标签
+            updateInterval:3000,
+            chartConfig:{
+				type: 'line',
+				data: {
+					datasets: []
+				},
+				options: {
+					responsive: true,
+					title: {display: true, text: '数据入库实时统计'}
+				}
+			},
+			chartConfig1:{
+				type: 'bar',
+				data: {
+					datasets: []
+				},
+				options: {
+					responsive: true,
+					title: {display: true, text: '历史入库统计'}
+				}
+			}
+        },
+        methods: {
+           		 // 格式化状态
+            	tableRowClassName({row, rowIndex}) {
+			        if (row.level === '3') {
+			          return 'warning-row';
+			        } else if (row.level === '4') {
+			          return 'error-row';
+			        }
+			        else if (row.level === '1') {
+			          return 'debug-row';
+			        }
+			        return '';
+		      },
+            // 从服务器读取数据
+            loadData: function (currentPage, pageSize,seachData,sortColumn,sortOrder) {
+                this.loading = true;
+                if(seachData.timeSpan){
+	                 	this.$http.get(this.url,{"params":{
+	                		"currentPage":currentPage,
+	                		"pageSize":pageSize,
+	                		"sortColumn":sortColumn,
+	                		"sortOrder":sortOrder,
+	                		"level":seachData.level,
+	                		"type":seachData.type,
+	                		"startTime": seachData.timeSpan ? seachData.timeSpan[0]:null,
+	                		"endTime": seachData.timeSpan[1] ? seachData.timeSpan[1]:null
+	                	}}).then(function (res) {                    
+	                    this.logTableData = res.body.data.data;
+	                    this.totalCount = res.body.data.total;
+	                    this.loading = false;
+	                }, function () {
+	                    console.error('failed');
+	                });	         
+                }
+                else{
+	                this.$http.get(this.url,{"params":{
+	                		"currentPage":currentPage,
+	                		"pageSize":pageSize,
+	                		"sortColumn":sortColumn,
+	                		"sortOrder":sortOrder,
+	                		"level":seachData.level,
+	                		"type":seachData.type
+	                	}}).then(function (res) {	                    
+	                    this.logTableData = res.body.data.data;
+	                    this.totalCount = res.body.data.total;
+	                    this.loading = false;
+	                }, function () {
+	                    console.error('failed');
+	                });                
+                }
+            },  
+            // 搜索
+            search: function () {
+                console.log(this.seachData);
+                this.loadData(this.currentPage, this.pagesize,this.seachData,this.sortColumn,this.sortOrder);
+            },
+            // 接口测试
+            testComit: function () {
+                this.$http.get('marketinfo',{"params":{	                		
+	                		"type":this.testData.type,
+	                		"codes":this.testData.codes
+	                	},
+	                	headers: {
+						   	"user":this.testData.username,
+	                		"password":this.testData.password
+						  }}
+	                	).then(function (res) {	                	                   
+	                    	this.testData.result = JSON.stringify(res.body.data);
+	                }, function (msg) {
+	                	this.$message.error(msg.body.message);
+	            }); 
+            },
+            // 弹出对话框
+            handleadd: function () {
+                this.dialogFormVisible = true;
+            },
+            // 每页显示数据量变更
+            handleSizeChange: function (val) {
+                this.pagesize = val;
+                this.loadData(this.currentPage, this.pagesize,this.seachData,this.sortColumn,this.sortOrder);
+            },
+            // 页码变更
+            handleCurrentChange: function (val) {
+                this.currentPage = val;
+                this.loadData(this.currentPage, this.pagesize,this.seachData,this.sortColumn,this.sortOrder);
+            },
+            sortChange:function(column){
+                console.log(column);
+                this.currentPage = 1;
+                this.sortColumn = column.prop;
+                this.sortOrder = column.order ==='ascending'? 'asc':'desc';
+                this.loadData(this.currentPage, this.pagesize,this.seachData,this.sortColumn,this.sortOrder);
+            },
+            tabChange:function(tab){
+            	//console.log(tab);
+            	if(tab.label ==='状态监控'){
+	            	if(!this.statusOpened){
+	            		this.statusOpened = true;
+	            		var chart1,chart2;            	
+	            		//第一次打开，未初始化
+	           			this.$http.get("marketinfo/init-chart",{"params":{
+	                		
+	                	}}).then(function (res) {
+		                	this.chartConfig.data.labels = res.body.data.labels;
+		                	this.chartConfig.data.datasets = res.body.data.dataSets;
+		                	
+		                	this.chartConfig1.data.labels = res.body.data.labels1;
+		                	this.chartConfig1.data.datasets = res.body.data.dataSets1;
+		                	
+							this.updateInterval = res.body.data.timeSpan * 1000;
+							
+							var ctx1 = document.getElementById('chart1').getContext('2d');
+							chart1 = new Chart(ctx1, this.chartConfig);	
+												
+							var ctx2 = document.getElementById('chart2').getContext('2d');
+							chart2= new Chart(ctx2, this.chartConfig1);	
+							
+							setInterval(function() {
+								if (vue.chartConfig.data.datasets.length > 0) {
+									vue.$http.get("marketinfo/update-chart",{"params":{
+			                		
+				                	}}).then(function (res) {
+					                	vue.chartConfig.data.labels.push(res.body.data.time);
+					                	vue.chartConfig.data.labels.shift();
+					                	
+					                	vue.chartConfig.data.datasets.forEach(function(item,index){
+										 	res.body.data.datas.forEach(function(data,index){
+										 		if(item.label == data.label){
+					                				item.data.push(data.data);
+					                				item.data.shift();
+					                				return;		                				
+					                			}											
+										 	});									 	
+										});
+										
+									 	//处理历史统计信息(服务器每5分钟更新一次)
+										if(undefined != res.body.data.datas1 && null != res.body.data.datas1){
+											vue.chartConfig1.data.datasets.forEach(function(item,index){								 	
+											 	res.body.data.datas1.forEach(function(data,index){
+											 		if(item.label == data.label){
+						                				item.data[item.data.length-1] = data.data;
+						                				return;		                				
+						                			}
+											 	});	 									 	
+											});
+					                	}
+					                	chart1.update();
+										chart2.update();
+					                }, function () {
+					                    console.error('failed');
+					                });
+								}
+							}, this.updateInterval); 
+		                }, function () {
+		                    console.error('failed');
+		                });	
+	           		}           			           		
+            	}
+            },
+            getRandomNum:function(min, max){
+            	var range = max - min;
+			    var rand = Math.random();
+			    return(min + Math.round(rand * range));
+            }
+        }
+    });
 
-<form id="addTaskDlg" title="添加任务">
-	    <ol class="reg_error"></ol>	    
-	    <p>
-	        <label for="form.jobName">任务名称：</label>
-	        <input type="text" name="form.jobName" class="text" id="form.jobName" placeholder="输入唯一任务名"/>
-	        <span class="star">*</span>
-	    </p>
-	    <p>
-	        <label for="form.jobGroup">任务分组：</label>
-	        <input type="text" name="form.jobGroup"  class="text" id="form.jobGroup"/>
-	        <span class="star">*</span>
-	    </p>
-	    
-	    <p>
-	        <label for="form.jobName">&nbsp;&nbsp;&nbsp;&nbsp;命令行：</label>
-	        <input type="text" name="form.command" class="text" id="form.command"/>
-	        <span class="star">*</span>
-	    </p>
-	    <p>
-	        <label for="form.cronExpression">&nbsp;&nbsp;&nbsp;&nbsp;表达式：</label>
-	        <input type="text" name="form.cronExpression" class="text" id="form.cronExpression"/>
-	        <span class="star">*</span>
-	    </p>
-	    <p>
-	        <label for="form.description">任务描述：</label>
-	        <textarea rows="3" cols="25" name="form.description" id="form.description"></textarea>
-	        <span class="star">*</span>
-	    </p>
-</form>
-
+    //载入数据
+    vue.loadData(vue.currentPage, vue.pagesize,vue.seachData,vue.sortColumn,vue.sortOrder);
+</script>
 
 </body>
-
-	<script src="js/job.js"></script> 
 </html>

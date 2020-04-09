@@ -1,5 +1,6 @@
 package com.bhzq.marketinfo.service.impl;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,28 @@ public class LogServiceImpl implements LogService {
 
 	@Override
 	public void addLog(LogEntity logEntity) {
+		switch (logEntity.getLevel()) {
+			case "1"://调试
+				log.debug(logEntity.getContent());
+				break;
+			case "2":	//正常
+				log.info(logEntity.getContent());
+				break;
+			case "3":	//警告
+				log.warn(logEntity.getContent());
+				break;
+			case "4":	//错误
+				log.error(logEntity.getContent());
+				break;
+	
+			default:
+				log.trace(logEntity.getContent());
+		}
 		logMapper.add(logEntity);		
+	}
+
+	@Override
+	public void delete(Timestamp endTime) {
+		logMapper.delete(endTime);		
 	}
 }

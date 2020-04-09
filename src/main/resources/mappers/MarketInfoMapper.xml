@@ -14,11 +14,12 @@
 	FROM
 		`t_indexinfo` log
 		<where>
-				log.`code` in 
+			log.`id` in(SELECT max(`id`) from `t_indexinfo` GROUP BY `code` HAVING `code` in
 				<foreach collection="list" item="tagCode" index="index"
 			               open="(" close=")" separator=",">
 			        #{tagCode}
-			      </foreach>			     
+			    </foreach>
+			)							     
 		</where>
     </select>
     
@@ -30,8 +31,9 @@
 			log.`time`,
 			log.`insertTime`
 		FROM
-			`t_headlines` log
+			`t_news` log
 			<where>
+				DATE(log.`insertTime`) >= CURRENT_DATE AND 
 				log.`code` in 
 				<foreach collection="list" item="tagCode" index="index"
 			               open="(" close=")" separator=",">
@@ -48,11 +50,17 @@
 			`t_dict` group by `type`,`typeName`
 	 </select>
 	 
+	<select id="findUser" resultType="java.util.HashMap">
+	    SELECT `name` as 'key', `password` as 'value'
+	    FROM `t_user`
+	    WHERE `name` = #{name};
+	</select>
+	 
 	<select id="findCount"  resultType="java.lang.Integer">
 		SELECT 
 		<choose>		    
 		    <when test="category eq 'M'.toString()">
-		        COUNT(*) cout FROM `t_headlines`
+		        COUNT(*) cout FROM `t_news`
 		        WHERE insertTime BETWEEN #{startTime} AND #{endTime}
 		    </when>
 		    <when test='category!=null'>
@@ -70,12 +78,30 @@
 						UNION ALL
 						SELECT COUNT(*) cout
 						FROM
-							`t_headlines`
+							`t_news`
 						WHERE
 							insertTime BETWEEN #{startTime} AND #{endTime}
 				) tb
 		    </otherwise>
 		</choose>
     </select>
+    
+    <delete id="delete">
+	    delete 
+		<choose>		    
+		    <when test="category eq 'M'.toString()">
+		         FROM `t_news`
+		        WHERE insertTime &lt; #{endTime}
+		    </when>
+		    <when test='category!=null'>
+		         FROM `t_indexinfo` 
+		        WHERE insertTime &lt; #{endTime} AND `category` like "%"#{category,jdbcType=VARCHAR}"%"
+		    </when>
+		    <otherwise>
+				FROM `t_indexinfo` 
+		        WHERE insertTime &lt; #{endTime}
+			</otherwise>
+		</choose>
+	</delete>
     
 </mapper>

@@ -1,5 +1,6 @@
 package com.bhzq.marketinfo.mapper;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -17,4 +18,5 @@ public interface LogMapper {
     List<LogEntity> list(SearchLog searchLog);
     
     void add(LogEntity log);
+    void delete(Timestamp endTime);
 }
